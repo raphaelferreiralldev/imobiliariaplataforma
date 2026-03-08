@@ -39,9 +39,14 @@
         <p class="text-blue-200 text-xs">Plataforma de Inteligência Artificial</p>
       </div>
     </div>
-    <div id="status-badge" class="flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm">
-      <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-      <span>Verificando...</span>
+    <div class="flex items-center gap-3">
+      <button onclick="resetarDemo()" class="bg-white/10 hover:bg-white/20 border border-white/30 text-white text-sm rounded-lg px-4 py-1.5 transition-all cursor-pointer">
+        Reiniciar Demo
+      </button>
+      <div id="status-badge" class="flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm">
+        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+        <span>Verificando...</span>
+      </div>
     </div>
   </div>
 </header>
@@ -291,6 +296,27 @@ function showTab(id) {
 function loading(spinnerId, show) {
   const el = document.getElementById(spinnerId);
   if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
+}
+
+// ─── Reset Demo ──────────────────────────────────────────────────────────────
+
+async function resetarDemo() {
+  try {
+    await Promise.all([
+      fetch(`${API}/leads/seed-demo`, { method: 'POST' }),
+      fetch(`${API}/properties/seed-demo`, { method: 'POST' }),
+    ]);
+    leadsData = [];
+    propsData = [];
+    capturedIds = [];
+    document.getElementById('leads-list').innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-4xl mb-3">👥</div><p class="font-medium">Nenhum lead carregado</p><p class="text-sm mt-1">Clique em "Carregar Demo" para ver exemplos</p></div>`;
+    document.getElementById('props-list').innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-4xl mb-3">🏘️</div><p class="font-medium">Nenhum imóvel carregado</p><p class="text-sm mt-1">Clique em "Carregar Demo" para ver exemplos</p></div>`;
+    document.getElementById('capture-list').innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-4xl mb-3">🔎</div><p class="font-medium">Nenhum anúncio capturado ainda</p><p class="text-sm mt-1">Configure os filtros e clique em "Capturar Anúncios"</p></div>`;
+    document.getElementById('props-alert').classList.add('hidden');
+    loadStats();
+  } catch(e) {
+    alert('Erro ao reiniciar: ' + e.message);
+  }
 }
 
 // ─── Status & Stats ──────────────────────────────────────────────────────────
