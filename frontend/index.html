@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Imobiliária IA Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .tab-active { @apply bg-blue-600 text-white; }
+    .card { @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6; }
+    .btn { @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
+    .btn-success { @apply bg-emerald-600 text-white hover:bg-emerald-700; }
+    .btn-warning { @apply bg-amber-500 text-white hover:bg-amber-600; }
+    .btn-ghost { @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50; }
+    .badge { @apply px-2 py-0.5 rounded-full text-xs font-semibold; }
+    .badge-green { @apply bg-emerald-100 text-emerald-700; }
+    .badge-red { @apply bg-red-100 text-red-700; }
+    .badge-yellow { @apply bg-amber-100 text-amber-700; }
+    .badge-blue { @apply bg-blue-100 text-blue-700; }
+    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .chat-bubble-user { @apply bg-blue-600 text-white rounded-2xl rounded-br-sm px-4 py-2 max-w-md ml-auto; }
+    .chat-bubble-ai { @apply bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xl; }
+    .msg-card { @apply bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm whitespace-pre-wrap; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Imobiliária</h1>
+        <p class="text-blue-200 text-xs">Plataforma de Inteligência Artificial</p>
+      </div>
+    </div>
+    <div id="status-badge" class="flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm">
+      <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+      <span>Verificando...</span>
+    </div>
+  </div>
+</header>
+
+<!-- Stats Bar -->
+<div class="bg-white border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-6 py-3 grid grid-cols-4 gap-4 text-center">
+    <div><p class="text-xs text-gray-500">Leads Frios</p><p id="stat-leads" class="text-2xl font-bold text-blue-600">—</p></div>
+    <div><p class="text-xs text-gray-500">Imóveis Desatualizados</p><p id="stat-props" class="text-2xl font-bold text-amber-500">—</p></div>
+    <div><p class="text-xs text-gray-500">Anúncios Capturados</p><p id="stat-capture" class="text-2xl font-bold text-emerald-600">—</p></div>
+    <div><p class="text-xs text-gray-500">Documentos IA</p><p id="stat-kb" class="text-2xl font-bold text-purple-600">—</p></div>
+  </div>
+</div>
+
+<!-- Nav Tabs -->
+<nav class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 flex gap-3 py-3">
+    <button onclick="showTab('tab-support')" id="btn-support" class="btn btn-primary">
+      Suporte Interno
+    </button>
+    <button onclick="showTab('tab-leads')" id="btn-leads" class="btn btn-ghost">
+      Reaquecimento de Leads
+    </button>
+    <button onclick="showTab('tab-properties')" id="btn-properties" class="btn btn-ghost">
+      Atualização de Imóveis
+    </button>
+    <button onclick="showTab('tab-capture')" id="btn-capture" class="btn btn-ghost">
+      Captação de Anúncios
+    </button>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-6 py-6">
+
+  <!-- ─── TAB 1: Suporte Interno ─── -->
+  <div id="tab-support" class="space-y-4">
+    <div class="card">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">💬</div>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">Suporte Interno com IA</h2>
+          <p class="text-sm text-gray-500">Pergunte sobre processos, regulamentos CRECI, políticas internas, documentação e comissões.</p>
+        </div>
+      </div>
+
+      <!-- Sugestões rápidas -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="text-xs text-gray-500 self-center">Perguntas rápidas:</span>
+        <button onclick="askQuick('Qual é o processo de captação de imóveis?')" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 cursor-pointer">Processo de captação</button>
+        <button onclick="askQuick('Qual é a comissão para corretor que capta e vende?')" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 cursor-pointer">Comissão venda própria</button>
+        <button onclick="askQuick('Quais documentos preciso para uma venda?')" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 cursor-pointer">Documentos para venda</button>
+        <button onclick="askQuick('Qual é o SLA de atendimento a leads?')" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 cursor-pointer">SLA de atendimento</button>
+      </div>
+
+      <!-- Chat -->
+      <div id="chat-messages" class="bg-slate-50 rounded-xl p-4 h-80 overflow-y-auto space-y-3 border border-slate-100">
+        <div class="chat-bubble-ai">
+          <p class="text-sm font-medium text-gray-700 mb-1">Assistente Interno IA 🤖</p>
+          <p class="text-sm text-gray-600">Olá! Sou seu assistente de suporte interno. Posso te ajudar com dúvidas sobre processos, regulamentos do CRECI, políticas de atendimento, tabelas de comissão e documentação necessária para transações. Como posso ajudar?</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <input id="chat-input" type="text" placeholder="Digite sua pergunta sobre processos, regulamentos..." class="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter')sendChat()" />
+        <button onclick="sendChat()" class="btn btn-primary flex items-center gap-2">
+          <span id="chat-btn-text">Enviar</span>
+          <div id="chat-spinner" class="spinner hidden"></div>
+        </button>
+      </div>
+
+      <div id="chat-sources" class="mt-2 hidden">
+        <p class="text-xs text-gray-400">Fontes consultadas: <span id="chat-sources-list" class="text-gray-500"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 2: Reaquecimento de Leads ─── -->
+  <div id="tab-leads" class="hidden space-y-4">
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🔥</div>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Reaquecimento de Leads</h2>
+            <p class="text-sm text-gray-500">IA analisa leads frios, gera score de prioridade e cria mensagens personalizadas.</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="seedLeads()" class="btn btn-ghost text-sm">+ Carregar Demo</button>
+          <button onclick="reactivateLeads(false)" class="btn btn-warning text-sm flex items-center gap-2">
+            <span>Gerar Mensagens</span>
+            <div id="leads-spinner" class="spinner hidden"></div>
+          </button>
+          <button onclick="reactivateLeads(true)" class="btn btn-success text-sm">Enviar WhatsApp</button>
+        </div>
+      </div>
+
+      <div id="leads-list" class="space-y-3">
+        <div class="text-center py-12 text-gray-400">
+          <div class="text-4xl mb-3">👥</div>
+          <p class="font-medium">Nenhum lead carregado</p>
+          <p class="text-sm mt-1">Clique em "Carregar Demo" para ver exemplos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 3: Atualização de Imóveis ─── -->
+  <div id="tab-properties" class="hidden space-y-4">
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🏠</div>
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Atualização de Base de Imóveis</h2>
+            <p class="text-sm text-gray-500">Valida disponibilidade com proprietários via WhatsApp. Evita desperdício de budget em anúncios inválidos.</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="seedProperties()" class="btn btn-ghost text-sm">+ Carregar Demo</button>
+          <button onclick="validateProperties(false)" class="btn btn-warning text-sm flex items-center gap-2">
+            <span>Gerar Mensagens</span>
+            <div id="props-spinner" class="spinner hidden"></div>
+          </button>
+          <button onclick="validateProperties(true)" class="btn btn-success text-sm">Enviar WhatsApp</button>
+        </div>
+      </div>
+
+      <div id="props-alert" class="hidden mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+        ⚠️ Imóveis não validados há mais de 60 dias podem estar desatualizados e gerando custos desnecessários com anúncios.
+      </div>
+
+      <div id="props-list" class="space-y-3">
+        <div class="text-center py-12 text-gray-400">
+          <div class="text-4xl mb-3">🏘️</div>
+          <p class="font-medium">Nenhum imóvel carregado</p>
+          <p class="text-sm mt-1">Clique em "Carregar Demo" para ver exemplos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 4: Captação de Anúncios ─── -->
+  <div id="tab-capture" class="hidden space-y-4">
+    <div class="card">
+      <div class="flex items-start gap-3 mb-5">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🔍</div>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">Captação de Anúncios Particulares</h2>
+          <p class="text-sm text-gray-500">Captura anúncios de proprietários em portais imobiliários e inicia abordagem automatizada.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div>
+          <label class="text-xs font-medium text-gray-600 mb-1 block">Portal</label>
+          <select id="scrape-portal" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="olx">OLX</option>
+            <option value="vivareal">Viva Real</option>
+            <option value="zapimoveis">ZAP Imóveis</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-gray-600 mb-1 block">Cidade</label>
+          <input id="scrape-cidade" type="text" value="São Paulo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-gray-600 mb-1 block">Tipo de Imóvel</label>
+          <select id="scrape-tipo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="apartamento">Apartamento</option>
+            <option value="casa">Casa</option>
+            <option value="terreno">Terreno</option>
+            <option value="studio">Studio</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-gray-600 mb-1 block">Preço Máximo (R$)</label>
+          <input id="scrape-preco" type="number" placeholder="Ex: 800000" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-5">
+        <button onclick="runScrape()" class="btn btn-primary flex items-center gap-2">
+          <span>🔍 Capturar Anúncios</span>
+          <div id="scrape-spinner" class="spinner hidden"></div>
+        </button>
+        <button onclick="outreachAll('whatsapp')" class="btn btn-success text-sm">📱 Abordar via WhatsApp</button>
+        <button onclick="outreachAll('ligacao')" class="btn btn-warning text-sm">📞 Iniciar Ligações</button>
+      </div>
+
+      <div id="capture-list" class="space-y-3">
+        <div class="text-center py-12 text-gray-400">
+          <div class="text-4xl mb-3">🔎</div>
+          <p class="font-medium">Nenhum anúncio capturado ainda</p>
+          <p class="text-sm mt-1">Configure os filtros e clique em "Capturar Anúncios"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API = 'http://localhost:8000/api';
+let chatHistory = [];
+let capturedIds = [];
+let leadsData = [];
+let propsData = [];
+
+// ─── Utils ───────────────────────────────────────────────────────────────────
+
+function fmt(n) {
+  if (!n) return '—';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
+}
+
+function fmtDate(d) {
+  if (!d) return 'Nunca';
+  const date = new Date(d);
+  const diff = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (diff === 0) return 'Hoje';
+  if (diff === 1) return 'Ontem';
+  return `${diff} dias atrás`;
+}
+
+function scoreColor(s) {
+  if (s >= 70) return 'text-red-600 font-bold';
+  if (s >= 50) return 'text-amber-500 font-semibold';
+  return 'text-gray-400';
+}
+
+function scoreLabel(s) {
+  if (s >= 70) return '🔴 Alta Prioridade';
+  if (s >= 50) return '🟡 Média Prioridade';
+  return '🟢 Baixa Prioridade';
+}
+
+function showTab(id) {
+  ['tab-support','tab-leads','tab-properties','tab-capture'].forEach(t => {
+    document.getElementById(t).classList.add('hidden');
+    document.getElementById('btn-' + t.replace('tab-','')).className = 'btn btn-ghost flex items-center gap-2';
+  });
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('btn-' + id.replace('tab-','')).className = 'btn btn-primary flex items-center gap-2';
+}
+
+function loading(spinnerId, show) {
+  const el = document.getElementById(spinnerId);
+  if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
+}
+
+// ─── Status & Stats ──────────────────────────────────────────────────────────
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/health`);
+    const d = await r.json();
+    const badge = document.getElementById('status-badge');
+    if (d.status === 'online') {
+      badge.innerHTML = `<div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><span>${d.modo === 'demo' ? 'Modo Demo' : 'Produção'}</span>`;
+    }
+  } catch(e) {
+    document.getElementById('status-badge').innerHTML = `<div class="w-2 h-2 bg-red-400 rounded-full"></div><span>Offline</span>`;
+  }
+
+  try {
+    const [leads, props, capture, kb] = await Promise.all([
+      fetch(`${API}/leads/?status=perdido&limit=100`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/properties/desatualizados`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/capture/stats`).then(r => r.json()).catch(() => ({ total_capturados: 0 })),
+      fetch(`${API}/support/knowledge-base`).then(r => r.json()).catch(() => [])
+    ]);
+    document.getElementById('stat-leads').textContent = Array.isArray(leads) ? leads.length : '—';
+    document.getElementById('stat-props').textContent = Array.isArray(props) ? props.length : '—';
+    document.getElementById('stat-capture').textContent = capture.total_capturados ?? '—';
+    document.getElementById('stat-kb').textContent = Array.isArray(kb) ? kb.length : '—';
+  } catch(e) {}
+}
+
+// ─── Support Chat ────────────────────────────────────────────────────────────
+
+function appendMessage(role, text, sources) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'flex justify-end' : '';
+
+  if (role === 'user') {
+    div.innerHTML = `<div class="chat-bubble-user text-sm">${text}</div>`;
+  } else {
+    const sourcesHtml = sources && sources.length
+      ? `<p class="text-xs text-gray-400 mt-2 border-t border-gray-100 pt-2">📚 ${sources.join(' · ')}</p>` : '';
+    div.innerHTML = `<div class="chat-bubble-ai"><p class="text-sm font-medium text-blue-700 mb-1">Assistente IA 🤖</p><p class="text-sm text-gray-700 whitespace-pre-wrap">${text}</p>${sourcesHtml}</div>`;
+  }
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function askQuick(q) {
+  document.getElementById('chat-input').value = q;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  appendMessage('user', q);
+  chatHistory.push({ role: 'user', content: q });
+  loading('chat-spinner', true);
+  document.getElementById('chat-btn-text').textContent = '...';
+
+  try {
+    const r = await fetch(`${API}/support/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pergunta: q, historico: chatHistory.slice(-6) })
+    });
+    const d = await r.json();
+    appendMessage('ai', d.resposta, d.fontes);
+    chatHistory.push({ role: 'assistant', content: d.resposta });
+  } catch(e) {
+    appendMessage('ai', '❌ Erro ao conectar com o servidor. Verifique se o backend está rodando.');
+  }
+
+  loading('chat-spinner', false);
+  document.getElementById('chat-btn-text').textContent = 'Enviar';
+}
+
+// ─── Leads ───────────────────────────────────────────────────────────────────
+
+async function seedLeads() {
+  await fetch(`${API}/leads/seed-demo`, { method: 'POST' });
+  await loadLeads();
+  loadStats();
+}
+
+async function loadLeads() {
+  const r = await fetch(`${API}/leads/?status=perdido&limit=50`);
+  leadsData = await r.json();
+  renderLeads(leadsData);
+}
+
+function renderLeads(leads) {
+  const container = document.getElementById('leads-list');
+  if (!leads.length) {
+    container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-4xl mb-3">👥</div><p>Clique em "Carregar Demo" para ver exemplos</p></div>`;
+    return;
+  }
+
+  container.innerHTML = leads.map(l => `
+    <div class="border border-gray-100 rounded-xl p-4 hover:border-blue-200 transition-all bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-1">
+            <span class="font-semibold text-gray-800">${l.nome}</span>
+            ${l.score_reaquecimento > 0 ? `<span class="text-xs ${scoreColor(l.score_reaquecimento)}">${scoreLabel(l.score_reaquecimento)} (${l.score_reaquecimento.toFixed(0)})</span>` : ''}
+          </div>
+          <div class="flex flex-wrap gap-3 text-xs text-gray-500 mb-2">
+            <span>📱 ${l.telefone}</span>
+            ${l.interesse ? `<span>🏠 ${l.interesse}</span>` : ''}
+            ${l.bairro_interesse ? `<span>📍 ${l.bairro_interesse}</span>` : ''}
+            ${l.orcamento_max ? `<span>💰 até ${fmt(l.orcamento_max)}</span>` : ''}
+            <span>⏱ ${fmtDate(l.ultimo_contato)}</span>
+          </div>
+          ${l.mensagem_ia ? `<div class="msg-card mt-2">${l.mensagem_ia}</div>` : ''}
+        </div>
+        <span class="badge ${l.status === 'em_contato' ? 'badge-green' : 'badge-yellow'} ml-3 flex-shrink-0">${l.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function reactivateLeads(sendWhatsapp) {
+  loading('leads-spinner', true);
+  try {
+    const r = await fetch(`${API}/leads/reativar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enviar_whatsapp: sendWhatsapp })
+    });
+    const results = await r.json();
+
+    // Atualizar mensagens na lista
+    results.forEach(res => {
+      const lead = leadsData.find(l => l.id === res.lead_id);
+      if (lead) {
+        lead.mensagem_ia = res.mensagem;
+        lead.score_reaquecimento = res.score;
+        if (sendWhatsapp) lead.status = 'em_contato';
+      }
+    });
+    renderLeads(leadsData);
+
+    if (sendWhatsapp) {
+      const sent = results.filter(r => r.status_envio !== 'pendente').length;
+      alert(`✅ ${sent} mensagens enviadas via WhatsApp!`);
+    } else {
+      alert(`✅ Mensagens geradas para ${results.length} leads. Revise e clique em "Enviar WhatsApp" para disparar.`);
+    }
+  } catch(e) {
+    alert('❌ Erro: ' + e.message);
+  }
+  loading('leads-spinner', false);
+  loadStats();
+}
+
+// ─── Properties ──────────────────────────────────────────────────────────────
+
+async function seedProperties() {
+  await fetch(`${API}/properties/seed-demo`, { method: 'POST' });
+  await loadProperties();
+  loadStats();
+}
+
+async function loadProperties() {
+  const r = await fetch(`${API}/properties/desatualizados`);
+  propsData = await r.json();
+  renderProperties(propsData);
+  if (propsData.length > 0) document.getElementById('props-alert').classList.remove('hidden');
+}
+
+function renderProperties(props) {
+  const container = document.getElementById('props-list');
+  if (!props.length) {
+    container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-4xl mb-3">🏘️</div><p>Clique em "Carregar Demo" para ver exemplos</p></div>`;
+    return;
+  }
+
+  container.innerHTML = props.map(p => {
+    const diasSemValidar = p.ultima_validacao
+      ? Math.floor((Date.now() - new Date(p.ultima_validacao).getTime()) / 86400000)
+      : 999;
+    const urgencia = diasSemValidar > 150 ? 'badge-red' : diasSemValidar > 90 ? 'badge-yellow' : 'badge-blue';
+
+    return `
+    <div class="border border-gray-100 rounded-xl p-4 hover:border-emerald-200 transition-all bg-white">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-1">
+            <span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">${p.codigo}</span>
+            <span class="font-semibold text-gray-800">${p.titulo}</span>
+          </div>
+          <div class="flex flex-wrap gap-3 text-xs text-gray-500 mb-2">
+            <span>👤 ${p.proprietario_nome}</span>
+            <span>📱 ${p.proprietario_telefone}</span>
+            <span>💰 ${fmt(p.preco_venda)}</span>
+            <span>⏱ Validado: ${fmtDate(p.ultima_validacao)}</span>
+            <span class="badge ${urgencia}">${diasSemValidar === 999 ? 'Nunca validado' : `${diasSemValidar} dias sem validar`}</span>
+          </div>
+          ${p.mensagem_ia ? `<div class="msg-card mt-2">${p.mensagem_ia}</div>` : ''}
+        </div>
+        <span class="badge badge-${p.status === 'disponivel' ? 'green' : p.status === 'vendido' ? 'red' : 'yellow'} ml-3 flex-shrink-0">${p.status}</span>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+async function validateProperties(sendWhatsapp) {
+  loading('props-spinner', true);
+  try {
+    const r = await fetch(`${API}/properties/validar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enviar_whatsapp: sendWhatsapp })
+    });
+    const results = await r.json();
+
+    results.forEach(res => {
+      const prop = propsData.find(p => p.id === res.property_id);
+      if (prop) prop.mensagem_ia = res.mensagem;
+    });
+    renderProperties(propsData);
+
+    const msg = sendWhatsapp
+      ? `✅ Mensagens de validação enviadas para ${results.length} proprietários!`
+      : `✅ Mensagens geradas para ${results.length} imóveis. Clique "Enviar WhatsApp" para disparar.`;
+    alert(msg);
+  } catch(e) {
+    alert('❌ Erro: ' + e.message);
+  }
+  loading('props-spinner', false);
+}
+
+// ─── Capture ─────────────────────────────────────────────────────────────────
+
+async function runScrape() {
+  const portal = document.getElementById('scrape-portal').value;
+  const cidade = document.getElementById('scrape-cidade').value;
+  const tipo = document.getElementById('scrape-tipo').value;
+  const preco = document.getElementById('scrape-preco').value;
+
+  loading('scrape-spinner', true);
+  capturedIds = [];
+
+  try {
+    const r = await fetch(`${API}/capture/scrape`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        portal, cidade,
+        tipo_imovel: tipo,
+        preco_max: preco ? parseFloat(preco) : null,
+        limite: 8
+      })
+    });
+    const listings = await r.json();
+    capturedIds = listings.map(l => l.id);
+    renderCapture(listings);
+    loadStats();
+  } catch(e) {
+    alert('❌ Erro ao capturar: ' + e.message);
+  }
+  loading('scrape-spinner', false);
+}
+
+function renderCapture(listings) {
+  const container = document.getElementById('capture-list');
+  if (!listings.length) {
+    container.innerHTML = `<div class="text-center py-12 text-gray-400">Nenhum anúncio encontrado.</div>`;
+    return;
+  }
+
+  container.innerHTML = listings.map(l => `
+    <div class="border border-gray-100 rounded-xl p-4 hover:border-purple-200 transition-all bg-white">
+      <div class="flex items-start gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-1">
+            <span class="badge badge-blue">${l.portal}</span>
+            <span class="font-semibold text-gray-800">${l.titulo}</span>
+          </div>
+          <div class="flex flex-wrap gap-3 text-xs text-gray-500 mb-2">
+            <span>📍 ${l.bairro || '—'}, ${l.cidade}</span>
+            ${l.area_m2 ? `<span>📐 ${l.area_m2}m²</span>` : ''}
+            ${l.quartos ? `<span>🛏 ${l.quartos} quartos</span>` : ''}
+            <span>💰 ${fmt(l.preco)}</span>
+            ${l.proprietario_telefone ? `<span>📱 ${l.proprietario_telefone}</span>` : ''}
+          </div>
+          ${l.mensagem_abordagem ? `<div class="msg-card mt-2">${l.mensagem_abordagem}</div>` : ''}
+          <a href="${l.url_anuncio}" target="_blank" class="text-xs text-blue-500 hover:underline mt-1 inline-block">Ver anúncio original →</a>
+        </div>
+        <span class="badge badge-${l.status === 'contatado' ? 'green' : l.status === 'convertido' ? 'blue' : 'yellow'} flex-shrink-0">${l.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function outreachAll(canal) {
+  if (!capturedIds.length) {
+    alert('Capture anúncios primeiro!');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API}/capture/abordar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listing_ids: capturedIds, canal })
+    });
+    const results = await r.json();
+    alert(`✅ Abordagem iniciada para ${results.length} proprietários via ${canal}!`);
+    runScrape(); // Recarregar com status atualizado
+  } catch(e) {
+    alert('❌ Erro: ' + e.message);
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+loadStats();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
