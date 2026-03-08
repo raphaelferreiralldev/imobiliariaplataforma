@@ -376,15 +376,26 @@ async function sendChat() {
 // ─── Leads ───────────────────────────────────────────────────────────────────
 
 async function seedLeads() {
-  await fetch(`${API}/leads/seed-demo`, { method: 'POST' });
-  await loadLeads();
-  loadStats();
+  try {
+    const r = await fetch(`${API}/leads/seed-demo`, { method: 'POST' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    await loadLeads();
+    loadStats();
+  } catch(e) {
+    alert('Erro ao carregar demo: ' + e.message + '\nVerifique se o backend está online.');
+  }
 }
 
 async function loadLeads() {
-  const r = await fetch(`${API}/leads/?status=perdido&limit=50`);
-  leadsData = await r.json();
-  renderLeads(leadsData);
+  try {
+    const r = await fetch(`${API}/leads/?limit=50`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    leadsData = await r.json();
+    renderLeads(leadsData);
+  } catch(e) {
+    document.getElementById('leads-list').innerHTML =
+      `<div class="text-center py-12 text-red-400"><p>Erro ao carregar leads: ${e.message}</p></div>`;
+  }
 }
 
 function renderLeads(leads) {
