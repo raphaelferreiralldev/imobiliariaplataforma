@@ -438,6 +438,12 @@ async function reactivateLeads(sendWhatsapp) {
     });
     const results = await r.json();
 
+    if (!Array.isArray(results)) {
+      alert('Nenhum lead elegível encontrado. Tente recarregar os dados demo.');
+      loading('leads-spinner', false);
+      return;
+    }
+
     // Atualizar mensagens na lista
     results.forEach(res => {
       const lead = leadsData.find(l => l.id === res.lead_id);
