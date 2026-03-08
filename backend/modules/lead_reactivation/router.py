@@ -182,9 +182,9 @@ async def criar_lead(lead: LeadCreate, db: Session = Depends(get_db)):
 
 @router.post("/seed-demo")
 async def popular_leads_demo(db: Session = Depends(get_db)):
-    """Popula banco com leads de demonstração."""
-    if db.query(Lead).count() > 0:
-        return {"mensagem": "Leads de demo já existem"}
+    """Popula banco com leads de demonstração (sempre reseta para estado inicial)."""
+    db.query(Lead).delete()
+    db.commit()
 
     leads_demo = [
         Lead(nome="Carlos Mendes", telefone="11999001001", email="carlos@email.com",

@@ -137,9 +137,9 @@ async def cadastrar_imovel(prop: PropertyCreate, db: Session = Depends(get_db)):
 
 @router.post("/seed-demo")
 async def popular_imoveis_demo(db: Session = Depends(get_db)):
-    """Popula banco com imóveis de demonstração."""
-    if db.query(Property).count() > 0:
-        return {"mensagem": "Imóveis de demo já existem"}
+    """Popula banco com imóveis de demonstração (sempre reseta para estado inicial)."""
+    db.query(Property).delete()
+    db.commit()
 
     imoveis_demo = [
         Property(codigo="AP001", titulo="Apartamento 3 quartos - Moema", tipo="Apartamento",
