@@ -305,6 +305,7 @@ async function resetarDemo() {
     await Promise.all([
       fetch(`${API}/leads/seed-demo`, { method: 'POST' }),
       fetch(`${API}/properties/seed-demo`, { method: 'POST' }),
+      fetch(`${API}/capture/reset-demo`, { method: 'POST' }),
     ]);
     leadsData = [];
     propsData = [];

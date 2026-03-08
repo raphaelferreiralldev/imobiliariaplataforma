@@ -396,3 +396,11 @@ async def estatisticas_captacao(db: Session = Depends(get_db)):
         "por_portal": por_portal,
         "por_status": por_status
     }
+
+
+@router.post("/reset-demo")
+async def resetar_anuncios(db: Session = Depends(get_db)):
+    """Apaga todos os anúncios capturados para reiniciar a demonstração."""
+    db.query(CapturedListing).delete()
+    db.commit()
+    return {"mensagem": "Anúncios resetados com sucesso"}
